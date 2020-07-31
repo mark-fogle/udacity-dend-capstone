@@ -76,3 +76,25 @@ class SqlQueries:
     ORDER BY p.port_code)
     ON CONFLICT (port_id) DO NOTHING
     """
+
+    # Create demographics dimension table
+    create_demographics_table = """
+    CREATE TABLE public.dim_demographics
+    (
+    demographics_id BIGINT GENERATED ALWAYS AS IDENTITY,
+    port_id BIGINT,
+    median_age numeric(18,2),
+    male_population int,
+    female_population int,
+    total_population bigint,
+    number_of_veterans int,
+    foreign_born int,
+    avg_household_size numeric(18,2),
+    race varchar(100),
+    demo_count int,
+    UNIQUE (port_id, race),
+    PRIMARY KEY(demographics_id),
+    CONSTRAINT fk_port
+    FOREIGN KEY(port_id) REFERENCES dim_ports(port_id)
+    )
+    """

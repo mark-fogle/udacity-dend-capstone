@@ -35,3 +35,23 @@ class SqlQueries:
     PRIMARY KEY(port_id)
     )
     """
+
+    # Create Airports Dimension Table
+    create_airports_table = """
+    CREATE TABLE public.dim_airports
+    (
+    airport_id BIGINT GENERATED ALWAYS AS IDENTITY,
+    port_id BIGINT UNIQUE,
+    airport_type VARCHAR(256),
+    airport_name VARCHAR(256),
+    elevation_ft INT,
+    municipality VARCHAR(256),
+    gps_code VARCHAR(256),
+    iata_code VARCHAR(256),
+    local_code VARCHAR(256),
+    coordinates VARCHAR(256),
+    PRIMARY KEY(airport_id),
+    CONSTRAINT fk_port
+    FOREIGN KEY(port_id) REFERENCES dim_ports(port_id)
+    )
+    """

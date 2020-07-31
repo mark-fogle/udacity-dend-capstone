@@ -127,3 +127,24 @@ class SqlQueries:
     PRIMARY KEY (sas_timestamp)
     )
     """
+
+    # Extract time dimension data from staging immigration arrival and departure dates
+    extract_time_data = """
+    INSERT INTO dim_time (sas_timestamp, year,month,day,quarter,week,day_of_week)
+    SELECT ts, 
+    date_part('year', sas_date) as year,
+    date_part('month', sas_date) as month,
+    date_part('day', sas_date) as day, 
+    date_part('quarter', sas_date) as quarter,
+    date_part('week', sas_date) as week,
+    date_part('dow', sas_date) as day_of_week
+    FROM
+    (SELECT DISTINCT arrdate as ts, TIMESTAMP '1960-01-01 00:00:00 +00:00' + (arrdate * INTERVAL '1 day') as sas_date
+    FROM staging_immigration
+    UNION
+    SELECT DISTINCT depdate as ts, TIMESTAMP '1960-01-01 00:00:00 +00:00' + (depdate * INTERVAL '1 day') as sas_date
+    FROM staging_immigration
+    WHERE depdate IS NOT NULL
+    ) t1
+    ON CONFLICT(sas_timestamp) DO NOTHING
+    """

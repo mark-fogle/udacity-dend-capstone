@@ -23,3 +23,15 @@ class SqlQueries:
     ON CONFLICT (country)
     DO NOTHING
     """
+
+    # Create Ports Dimension Table
+    create_ports_table = """
+    CREATE TABLE public.dim_ports
+    (
+    port_id BIGINT GENERATED ALWAYS AS IDENTITY,
+    port_code VARCHAR(3) UNIQUE,
+    port_city VARCHAR(256),
+    port_state VARCHAR(50),
+    PRIMARY KEY(port_id)
+    )
+    """

@@ -187,3 +187,26 @@ class SqlQueries:
     INNER JOIN public.dim_countries c ON i.country_code = c.country_code
     INNER JOIN public.dim_ports p ON i.port_code = p.port_code
     """
+
+    # Create staging immigration table
+    create_staging_immigration = """
+    DROP TABLE IF EXISTS public.staging_immigration;
+    CREATE TABLE public.staging_immigration (
+    year int2,
+	month int2,
+	arrival_day int2,
+	age int2,
+	country_code varchar(3),
+	port_code varchar(3),
+	mode varchar(256),
+	visa_category varchar(256),
+	visatype varchar(128),
+	gender varchar(10) null,
+	birth_year int2,
+	arrdate int4,
+	arrival_date date,
+	depdate int4 null,
+	departure_date date null
+    );
+    """
+

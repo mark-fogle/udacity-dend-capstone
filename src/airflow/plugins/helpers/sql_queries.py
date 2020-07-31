@@ -219,6 +219,16 @@ class SqlQueries:
     );
     """
 
+    # Create staging ports table
+    create_staging_ports_table = """
+    DROP TABLE IF EXISTS public.staging_ports;
+    CREATE TABLE public.staging_ports (
+    port_code varchar(3),
+    city varchar(256),
+    state varchar(50)
+    );
+    """
+
     # Create staging airports table
     create_staging_airports_table = """
     DROP TABLE IF EXISTS public.staging_airports;

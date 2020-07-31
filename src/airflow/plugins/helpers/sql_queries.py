@@ -65,3 +65,14 @@ class SqlQueries:
     ORDER BY p.port_code)
     ON CONFLICT (port_code) DO NOTHING
     """
+
+    # Extract airports data from staging airports 
+    extract_airports = """
+    INSERT INTO public.dim_airports (port_id, airport_type, airport_name, elevation_ft, municipality, gps_code, iata_code, local_code, coordinates)
+    (SELECT p.port_id, a.type, a.name, a.elevation_ft, a.municipality,
+    a.gps_code, a.iata_code, a.local_code, a.coordinates
+    FROM public.staging_airports a
+    INNER JOIN public.dim_ports p ON a.ident = p.port_code
+    ORDER BY p.port_code)
+    ON CONFLICT (port_id) DO NOTHING
+    """

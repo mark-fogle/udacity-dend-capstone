@@ -4,13 +4,14 @@ class SqlQueries:
     """
     # Create Countries Table
     create_countries_table = """
+    DROP TABLE IF EXISTS public.dim_countries;
     CREATE TABLE public.dim_countries
     (
     country_id bigint GENERATED ALWAYS AS IDENTITY,
     country_code varchar(3) NOT NULL UNIQUE,
     country varchar(256) NOT NULL UNIQUE,
     PRIMARY KEY(country_id)
-    )
+    );
     """
 
     # Extract countries from staging immigration data
@@ -26,6 +27,7 @@ class SqlQueries:
 
     # Create Ports Dimension Table
     create_ports_table = """
+    DROP TABLE IF EXISTS public.dim_ports;
     CREATE TABLE public.dim_ports
     (
     port_id BIGINT GENERATED ALWAYS AS IDENTITY,
@@ -33,11 +35,12 @@ class SqlQueries:
     port_city VARCHAR(256),
     port_state VARCHAR(50),
     PRIMARY KEY(port_id)
-    )
+    );
     """
 
     # Create Airports Dimension Table
     create_airports_table = """
+    DROP TABLE IF EXISTS public.dim_airports;
     CREATE TABLE public.dim_airports
     (
     airport_id BIGINT GENERATED ALWAYS AS IDENTITY,
@@ -53,7 +56,7 @@ class SqlQueries:
     PRIMARY KEY(airport_id),
     CONSTRAINT fk_port
     FOREIGN KEY(port_id) REFERENCES dim_ports(port_id)
-    )
+    );
     """
 
     # Extract ports from staging immigration data
@@ -79,6 +82,7 @@ class SqlQueries:
 
     # Create demographics dimension table
     create_demographics_table = """
+    DROP TABLE IF EXISTS public.dim_demographics;
     CREATE TABLE public.dim_demographics
     (
     demographics_id BIGINT GENERATED ALWAYS AS IDENTITY,
@@ -96,7 +100,7 @@ class SqlQueries:
     PRIMARY KEY(demographics_id),
     CONSTRAINT fk_port
     FOREIGN KEY(port_id) REFERENCES dim_ports(port_id)
-    )
+    );
     """
 
     # Extract demographics from staging data
@@ -115,7 +119,8 @@ class SqlQueries:
 
     # Create time dimension table
     create_time_table = """
-    CREATE TABLE dim_time
+    DROP TABLE IF EXISTS public.dim_time;
+    CREATE TABLE public.dim_time
     (
     sas_timestamp INT NOT NULL UNIQUE,
     year INT NOT NULL,
@@ -125,12 +130,12 @@ class SqlQueries:
     day_of_week INT NOT NULL,
     quarter INT NOT NULL,
     PRIMARY KEY (sas_timestamp)
-    )
+    );
     """
 
     # Extract time dimension data from staging immigration arrival and departure dates
     extract_time_data = """
-    INSERT INTO dim_time (sas_timestamp, year,month,day,quarter,week,day_of_week)
+    INSERT INTO public.dim_time (sas_timestamp, year,month,day,quarter,week,day_of_week)
     SELECT ts, 
     date_part('year', sas_date) as year,
     date_part('month', sas_date) as month,
@@ -151,7 +156,8 @@ class SqlQueries:
 
     # Create fact immigration table
     create_fact_immigration_table = """
-    CREATE TABLE fact_immigration
+    DROP TABLE IF EXISTS public.fact_immigration;
+    CREATE TABLE public.fact_immigration
     (
     immigration_id BIGINT GENERATED ALWAYS AS IDENTITY,
     country_id BIGINT,
@@ -169,7 +175,7 @@ class SqlQueries:
     CONSTRAINT fk_country FOREIGN KEY(country_id) REFERENCES dim_countries(country_id),
     CONSTRAINT fk_arrdate FOREIGN KEY(arrdate) REFERENCES dim_time(sas_timestamp),
     CONSTRAINT fk_depdate FOREIGN KEY(depdate) REFERENCES dim_time(sas_timestamp)
-    )
+    );
     """
 
     # Extract immigration data from staging to fact table

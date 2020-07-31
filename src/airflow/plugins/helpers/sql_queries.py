@@ -148,3 +148,26 @@ class SqlQueries:
     ) t1
     ON CONFLICT(sas_timestamp) DO NOTHING
     """
+
+    # Create fact immigration table
+    create_fact_immigration_table = """
+    CREATE TABLE fact_immigration
+    (
+    immigration_id BIGINT GENERATED ALWAYS AS IDENTITY,
+    country_id BIGINT,
+    port_id BIGINT,
+    age int,
+    travel_mode varchar(100),
+    visa_category varchar(100),
+    visa_type varchar(100),
+    gender varchar(10),
+    birth_year int,
+    arrdate int NOT NULL,
+    depdate int NULL,
+    PRIMARY KEY (immigration_id),
+    CONSTRAINT fk_port FOREIGN KEY(port_id) REFERENCES dim_ports(port_id),
+    CONSTRAINT fk_country FOREIGN KEY(country_id) REFERENCES dim_countries(country_id),
+    CONSTRAINT fk_arrdate FOREIGN KEY(arrdate) REFERENCES dim_time(sas_timestamp),
+    CONSTRAINT fk_depdate FOREIGN KEY(depdate) REFERENCES dim_time(sas_timestamp)
+    )
+    """

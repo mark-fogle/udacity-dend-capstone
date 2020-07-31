@@ -55,3 +55,13 @@ class SqlQueries:
     FOREIGN KEY(port_id) REFERENCES dim_ports(port_id)
     )
     """
+
+    # Extract ports from staging immigration data
+    extract_ports = """
+    INSERT INTO public.dim_ports (port_code, port_city, port_state)
+    (SELECT DISTINCT p.port_code, p.city, p.state
+    FROM public.staging_immigration i
+    INNER JOIN public.staging_ports p ON i.port_code = p.port_code
+    ORDER BY p.port_code)
+    ON CONFLICT (port_code) DO NOTHING
+    """

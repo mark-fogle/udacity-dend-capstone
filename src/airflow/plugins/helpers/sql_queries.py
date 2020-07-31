@@ -112,3 +112,18 @@ class SqlQueries:
     WHERE p.port_code = i.port_code))
     ON CONFLICT (port_id,race) DO NOTHING
     """
+
+    # Create time dimension table
+    create_time_table = """
+    CREATE TABLE dim_time
+    (
+    sas_timestamp INT NOT NULL UNIQUE,
+    year INT NOT NULL,
+    month INT NOT NULL,
+    day INT NOT NULL,
+    week INT NOT NULL,
+    day_of_week INT NOT NULL,
+    quarter INT NOT NULL,
+    PRIMARY KEY (sas_timestamp)
+    )
+    """

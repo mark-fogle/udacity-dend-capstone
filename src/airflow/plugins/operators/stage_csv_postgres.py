@@ -18,9 +18,6 @@ class StageCsvToPostgresOperator(BaseOperator):
     :param csv_path: Path to CSV file
     :type csv_path: str
 
-    :param execution_date: Logical execution date of DAG run (templated)
-    :type execution_date: str
-
     :param delimiter: CSV delimiter
     :type delimiter: str
         
@@ -37,8 +34,6 @@ class StageCsvToPostgresOperator(BaseOperator):
     TRUNCATE_SQL = """
         TRUNCATE TABLE {};
         """
-
-    template_fields = ['execution_date']
 
     @apply_defaults
     def __init__(self,

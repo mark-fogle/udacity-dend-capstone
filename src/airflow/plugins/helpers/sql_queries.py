@@ -210,3 +210,11 @@ class SqlQueries:
     );
     """
 
+    # Create staging countries table
+    create_staging_countries = """
+    DROP TABLE IF EXISTS public.staging_countries;
+    CREATE TABLE public.staging_countries (
+	country_code varchar(3) NOT NULL,
+	country varchar(256) NOT NULL
+    );
+    """

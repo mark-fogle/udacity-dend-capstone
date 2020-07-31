@@ -98,3 +98,17 @@ class SqlQueries:
     FOREIGN KEY(port_id) REFERENCES dim_ports(port_id)
     )
     """
+
+    # Extract demographics from staging data
+    extract_demographics = """
+    INSERT INTO public.dim_demographics (port_id, median_age, male_population, 
+    female_population, total_population, number_of_veterans,foreign_born,avg_household_size, race, demo_count)
+    (SELECT DISTINCT p.port_id, d."Median Age",d."Male Population",d."Female Population",d."Total Population",
+    d."Number of Veterans", d."Foreign-born",d."Average Household Size",d.race, d."count"
+    FROM public.dim_ports p
+    INNER JOIN public.staging_demographics d 
+    ON UPPER(p.port_city) = UPPER(d.city) AND UPPER(p.port_state) = UPPER(d."State Code")
+    WHERE EXISTS (SELECT port_code FROM public.staging_immigration i 
+    WHERE p.port_code = i.port_code))
+    ON CONFLICT (port_id,race) DO NOTHING
+    """

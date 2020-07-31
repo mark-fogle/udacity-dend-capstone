@@ -171,3 +171,13 @@ class SqlQueries:
     CONSTRAINT fk_depdate FOREIGN KEY(depdate) REFERENCES dim_time(sas_timestamp)
     )
     """
+
+    # Extract immigration data from staging to fact table
+    extract_immigration_data = """
+    INSERT INTO public.fact_immigration (country_id, port_id, age, travel_mode, visa_category, visa_type,
+                                        gender,birth_year,arrdate,depdate)
+    SELECT c.country_id, p.port_id, i.age, i.mode, i.visa_category,i.visatype,i.gender, i.birth_year,i.arrdate, i.depdate
+    FROM public.staging_immigration i
+    INNER JOIN public.dim_countries c ON i.country_code = c.country_code
+    INNER JOIN public.dim_ports p ON i.port_code = p.port_code
+    """

@@ -237,3 +237,23 @@ class SqlQueries:
 	coordinates varchar(256)
     );
     """
+
+    # Create demographics staging table
+    create_staging_demographics_table = """
+    DROP TABLE IF EXISTS public.staging_demographics;
+    CREATE TABLE public.staging_demographics (
+	City varchar(256),
+	State varchar(100),
+	"Median Age" numeric(18,2),
+	"Male Population" int4,
+	"Female Population" int4,
+	"Total Population" int8,
+	"Number of Veterans" int4,
+	"Foreign-born" int4,
+	"Average Household Size" numeric(18,2),
+	"State Code" varchar(50),
+	Race varchar(100),
+	Count int4
+    );
+    """
+    

@@ -218,3 +218,22 @@ class SqlQueries:
 	country varchar(256) NOT NULL
     );
     """
+
+    # Create staging airports table
+    create_staging_airports_table = """
+    DROP TABLE IF EXISTS public.staging_airports;
+    CREATE TABLE public.staging_airports (
+	ident varchar(256),
+	type varchar(256),
+	name varchar(256),
+	elevation_ft int4,
+	continent varchar(256),
+	iso_country varchar(256),
+	iso_region varchar(256),
+	municipality varchar(256),
+	gps_code varchar(256),
+	iata_code varchar(256),
+	local_code varchar(256),
+	coordinates varchar(256)
+    );
+    """

@@ -5,12 +5,17 @@ from airflow.plugins_manager import AirflowPlugin
 import operators
 import helpers
 
+
 # Defining the plugin class
 class UdacityPlugin(AirflowPlugin):
-    name = "udacity_dend_capstone_plugin"
+    name = "udacity_plugin"
     operators = [
-        operators.StageCsvToPostgresOperator
+        operators.StageToRedshiftOperator,
+        operators.DataQualityOperator,
+        operators.StageCsvToPostgresOperator,
+        operators.StageParquetToPostgresOperator
     ]
     helpers = [
-        helpers.SqlQueries
+        helpers.PostgresSqlQueries,
+        helpers.RedshiftSqlQueries
     ]

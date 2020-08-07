@@ -1,5 +1,7 @@
-from helpers.sql_queries import SqlQueries
+from helpers.sql_queries_postgres import PostgresSqlQueries
+from helpers.sql_queries_redshift import RedshiftSqlQueries
 
 __all__ = [
-    'SqlQueries',
+    'PostgresSqlQueries',
+    'RedshiftSqlQueries'
 ]

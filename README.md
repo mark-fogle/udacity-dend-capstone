@@ -2,7 +2,16 @@
 
 ## Project Summary
 
-This is the capstone project for the Udacity Data Engineering Nanodegree program. The idea is to take multiple data sources with no direct connection, clean the data, and process it through an ETL pipeline to produce a usable data set for analytics.
+This is the capstone project for the Udacity Data Engineering Nanodegree program. The idea is to take multiple disparate data sources, clean the data, and process it through an ETL pipeline to produce a usable data set for analytics.
+
+I decided to go with the Udacity provided project which is based on I94 immigration data. This is a large data set which contains immigration data for U.S. ports. The plan is to enrich this data using the other data sources suggested and create a working data warehouse which can be used for analytics.
+
+Ideas on questions we could explore with the final data set:
+
+* For a given port city, how many immigrants enter from which countries?
+* What are the demographics of the port city and is there any relationship to the country of origin?
+* Is there any relationship between the average temperature of the country of origin and average temperature of the port city of entry?
+* What time of year or month sees more immigration for certain areas?
 
 ## Data Source Analysis
 
@@ -76,87 +85,19 @@ This data is a single CSV file (5.8 KB). It provides additional information for 
 
 For this project I went with a [snowflake schema](https://en.wikipedia.org/wiki/Snowflake_schema). There is one fact table with the main immigration data with multiple dimension tables surrounding it. Some of the dimension tables are connected to other dimension tables. For instance, ports have demographics and optional airport information.
 
-### dim_ports
-
-|Field|Type|Description|
-|----|-----|-----------|
-|port_id|int8|Primary Key|
-|port_code|varchar(3) not null|3 character code used for I94 ports|
-|port_state|varchar(50)|U.S. state of port|
-|average_temperature|numeric(16,3)|Average temperature of port city|
-
-### dim_countries
-
-|Field|Type|Description|
-|----|-----|-----------|
-|country_id|int8|Primary Key|
-|country_code|varchar(3) not null|3 character code used for I94 countries|
-|average_temperature|numeric(16,3)|Average temperature of country|
-
-### dim_time
-
-|Field|Type|Description|
-|----|-----|-----------|
-|sas_timestamp|int4| Primary Key - The SAS timestamp (days since 1/1/1960)|
-|year|int4|4 digit year|
-|month|int4|Month (1-12)|
-|day|int4|Day (1-31)|
-|week|int4|Week of Year (1-52)|
-|day_of_week|int4|Day of Week (0-6) starting on Sunday|
-|quarter|int4|Quarter of Year (1-4)|
-
-### dim_demographics
-
-|Field|Type|Description|
-|----|-----|-----------|
-|demographics_id|int8|Primary Key|
-|port_id|int8|Foreign key to dim_ports|
-|median_age|numeric(18,2)|The median age for the demographic|
-|male_population|int4|Count of male population for city|
-|female_population|int4|Count of female population for city|
-|total_population|int8|Count of population for city|
-|num_of_veterans|int4|Count of veterans|
-|foreign_born|int4|Count of foreign born persons|
-|avg_household_size|numeric(18,2)|Average household size in city|
-|race|varchar(100)|Race for this demographic|
-|demo_count|int4|Count for this demographic|
-
-### dim_airports
-
-|Field|Type|Description|
-|----|-----|-----------|
-|airport_id|int8|Primary Key|
-|port_id|int4|Foreign key to dim_ports|
-|airport_type|varchar(256)|Short description of airport type|
-|airport_name|varchar(256)|Airport Name|
-|elevation_ft|int4|Airport elevation|
-|municipality|varchar(256)|Airport municipality|
-|gps_code|varchar(256)|Airport GPS code|
-|iata_code|varchar(256)|Airport International Air Transport Association code|
-|local_code|varchar(256)|Airport local code|
-|coordinates|varchar(256)|Airport Coordinates|
-
-### fact_immigration
-
-|Field|Type|Description|
-|----|-----|-----------|
-|immigration_id|int8|Primary Key|
-|country_id|int8|Foreign key to dim_countries|
-|port_id|int8|Foreign Key to dim_ports|
-|age|int4|Age of immigrant|
-|travel_mode|varchar(100)|Mode of travel for immigrant (air, sea, land, etc.)|
-|visa_category|varchar(100)|Immigrant VISA category|
-|visa_type|varchar(100)|Type of VISA|
-|gender|varchar(10)|Immigrant gender|
-|birth_year|int4|Immigrant birth year|
-|arrdate|int4|SAS timestamp of arrival date, Foreign key to dim_time|
-|depdate|int4|SAS timestamp of departure date, Foreign key to dim_time|
-
-
+[Data Dictionary](./docs/data_dictionary.md)
 
 ### Data Model Entity Relationship Diagram
 
 ![Data Model](./docs/images/data_model.png)
+
+## Choice of Technologies
+
+The main technologies used are:
+
+* Amazon S3 - I used S3 for data lake storage of the data to be processed. While we are building a data warehouse for a certain type of analysis, the data lake contains the cleaned raw data which could be used for a different type of analysis at a later time.
+* Apache Spark - I used Spark primarily to extract, clean, and partition the immigration data. Because the data was provided in a JupyterLab with attached storage and the files are so large, I decided to preprocess the data through Spark in that environment. In production we would probably add a DAG to Apache Airflow to submit a job to a Spark cluster on a monthly basis or as needed.
+* Apache Airflow - I used Apache Airflow as a tool for the primary data pipeline. The pipeline schedules and coordinates the flow of data from the S3 data lake to Amazon Redshift and performs quality checks along the way. Airflow makes it easy to set up the pipeline and make adjustments as requirements change over time.
 
 ## Data Pipeline
 
@@ -164,7 +105,7 @@ The main data pipeline uses Apache Airflow to process immigration data for  sing
 
 Airflow uses directed acyclic graphs (DAG's) to describe a pipeline workflow. Each DAG is made up of tasks which are the nodes of the graph. Each task implements an operator of some type to execute code.
 
-Ultimately I wanted to use Amazon Redshift as the data warehouse, but in order to avoid the cost of Redshift I did most of the early development against a local copy of PostgreSQL.
+Ultimately I wanted to use Amazon Redshift as the data warehouse, but in order to avoid the cost of running a Redshift cluster, I did most of the early development against a local copy of PostgreSQL.
 
 I created four DAG's, two for Postgres and two for Amazon Redshift:
 
@@ -217,3 +158,20 @@ Failure to meet the criteria of the data quality check will result in a failure 
 In addition to these two checks, foreign key constraints were used to ensure data integrity between the dimension tables and the fact table.
 
 ## Questions
+
+We are asked to answer how we would approach the problem differently under the following scenarios:
+
+* If the data was increased by 100x.
+  * I had no trouble processing the data while in development using Postgres and pandas on a single machine. Primarily the partitioning of the data makes this work. If the data were increased 100x, then we should be able to easily handle it using Spark and Redshift and scaling the clusters as needed. Since the immigration data was provided in files of one month at a time, I assume we would be processing that through Spark, breaking it down into day partitions, and then backfilling through the Airflow pipeline one day at a time.
+* If the pipelines were run on a daily basis by 7am.
+  * The pipeline is already set to run daily. The time taken to process a day is a matter of minutes. We might modify the scheduling to a specific time of day and introduce an SLA in Airflow to ensure jobs are completed in a timely manner and adjust accordingly.
+* If the database needed to be accessed by 100+ people
+  * Amazon Redshift as a data warehouse should have no issues with this and can be scaled as needed.
+
+## Data Usage
+
+**TO DO**: Provide query examples and charts
+
+## Setup Instructions
+
+**TO DO**: Provide instructions to set up environment

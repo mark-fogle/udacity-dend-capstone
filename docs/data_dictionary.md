@@ -26,7 +26,7 @@
 |month|int4|Month (1-12)|
 |day|int4|Day (1-31)|
 |week|int4|Week of Year (1-52)|
-|day_of_week|int4|Day of Week (0-6) starting on Sunday|
+|day_of_week|int4|Day of Week (1-7) starting on Sunday|
 |quarter|int4|Quarter of Year (1-4)|
 
 ## dim_demographics

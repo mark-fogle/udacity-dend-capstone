@@ -6,6 +6,12 @@ This is the capstone project for the Udacity Data Engineering Nanodegree program
 
 I decided to go with the Udacity provided project which is based on I94 immigration data. This is a large data set which contains immigration data for U.S. ports. The plan is to enrich this data using the other data sources suggested and create a working data warehouse which can be used for analytics.
 
+At a high level:
+
+* Data is extracted from the immigration SAS data, partitioned by year, month, and day, and stored in a data lake on Amazon S3 as Parquet files.
+* The partitioned data is loaded into Redshift into staging tables
+* The staging data is combined with other staged data sources to produce the final fact and dimension records in the Redshift warehouse.
+
 Ideas on questions we could explore with the final data set:
 
 * For a given port city, how many immigrants enter from which countries?
@@ -162,16 +168,72 @@ In addition to these two checks, foreign key constraints were used to ensure dat
 We are asked to answer how we would approach the problem differently under the following scenarios:
 
 * If the data was increased by 100x.
-  * I had no trouble processing the data while in development using Postgres and pandas on a single machine. Primarily the partitioning of the data makes this work. If the data were increased 100x, then we should be able to easily handle it using Spark and Redshift and scaling the clusters as needed. Since the immigration data was provided in files of one month at a time, I assume we would be processing that through Spark, breaking it down into day partitions, and then backfilling through the Airflow pipeline one day at a time.
+  * I had no trouble processing the data while in development using Postgres and pandas on a single machine. Primarily the partitioning of the data makes this work. If the data were increased 100x, then we should be able to easily handle it using Spark and Redshift and scaling the clusters as needed. Since the immigration data was provided in files of one month at a time, I assume we would be processing that through Spark, breaking it down into day partitions, and then back-filling through the Airflow pipeline one day at a time.
 * If the pipelines were run on a daily basis by 7am.
   * The pipeline is already set to run daily. The time taken to process a day is a matter of minutes. We might modify the scheduling to a specific time of day and introduce an SLA in Airflow to ensure jobs are completed in a timely manner and adjust accordingly.
 * If the database needed to be accessed by 100+ people
   * Amazon Redshift as a data warehouse should have no issues with this and can be scaled as needed.
 
-## Data Usage
+## Example Data Usage
 
-**TO DO**: Provide query examples and charts
+```sql
+--Immigrants arrivals by country for month of January
+
+SELECT c.country, COUNT(*) FROM fact_immigration i
+INNER JOIN dim_countries c ON i.country_id = c.country_id
+INNER JOIN dim_time t ON i.arrdate=t.sas_timestamp
+WHERE t.year=2016 AND t.month=1
+GROUP BY c.country
+ORDER BY count DESC
+LIMIT 10
+```
+
+![Immigrants by country of origin](./docs/images/immigrants_by_country.png)
+
+```sql
+--Top 10 immigrants by port of entry for month of January
+
+SELECT p.port_city, p.port_state, COUNT(*) as count
+FROM fact_immigration i
+INNER JOIN dim_ports p ON i.port_id = p.port_id
+INNER JOIN dim_time t ON i.arrdate=t.sas_timestamp
+WHERE t.year=2016 AND t.month=1
+GROUP BY p.port_city, p.port_state
+ORDER BY count DESC
+LIMIT 10
+```
+
+![Immigrants by port of entry](./docs/images/immigrants_by_port.png)
+
+```sql
+-- Arrivals by day of week
+
+SELECT t.day_of_week,COUNT(*) as count
+FROM fact_immigration i
+INNER JOIN dim_ports p ON i.port_id = p.port_id
+INNER JOIN dim_time t ON i.arrdate=t.sas_timestamp
+WHERE t.year=2016 AND t.month=1
+GROUP BY t.day_of_week
+ORDER BY t.day_of_week
+```
+
+![Immigrants by day of week](./docs/images/immigrants_by_day_of_week.png)
 
 ## Setup Instructions
 
-**TO DO**: Provide instructions to set up environment
+### Environment
+
+For my environment, I used the following:
+
+* Apache Airflow version 1.10.10
+* Python version 3.7.6
+* Apache Spark version 2.4.3
+
+### Setup
+
+1. Copy the contents of the /src/airflow/plugins folder to you Airflow plugins folder.
+1. Add the DAG's from /arc/airflow/dags to your Airflow dags folder. There are two sets, one for Postgres and one for Redshift.
+1. Configure the connections in Airflow for your database and AWS S3 (if you are using Redshift).
+1. You will need the data sources listed, but the immigration data is behind a pay wall so this may not be an option.
+
+There is a [notebook](/deploy/deploy_redshift_cluster.ipynb) that I used to deploy the Redshift cluster when needed.
